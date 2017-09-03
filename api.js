@@ -10,6 +10,47 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
         res.json({"Message" : "Hello World!"});
     });
 
+    router.post("/:loc/:type",function(req,res)
+    {
+
+        connection.query("SELECT locationid FROM location WHERE tag LIKE ?",
+            [req.params.loc],function(err,result){
+                if (!err) {
+                    var locId = result[0].locationid;
+                    connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?",
+                        [req.params.type], function (err, result) {
+                            if (!err) {
+                                var typeid = result[0].datatypeid;
+                                var query = "INSERT INTO readings (locationid,datatypeid,reading,timestamp) VALUES (?,?,?,?)";
+                                var values;
+                                var count = 0;
+                                var failures = 0;
+                                console.log(req.body);
+                                for(var item in req.body)
+                                {
+                                    console.log(req.body[item]);
+                                    if(req.body[item].reading !== undefined && req.body[item].timestamp !== undefined)
+                                    {
+                                        values = [locId,typeid,req.body[item].reading,req.body[item].timestamp];
+                                        connection.query(query,values, function (err, result) {
+                                            if(err) res.json({"Error": true, "Message": "Error executing MySQL query"});
+                                        });
+                                        count++;
+                                    } else failures++;
+                                }
+                                res.json({"Error" : false, "Message" : "Completed", "Added" : count, "Failures" : failures});
+                            } else {
+                                res.json({"Error": true, "Message": "Error executing MySQL query"});
+                            }
+                        });
+                } else {
+                    res.json({"Error": true, "Message": "Error executing MySQL query"});
+                }
+            });
+
+
+
+    });
 
     router.get("/:loc/:type", function(req,res){
 
@@ -17,25 +58,21 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
             [req.params.loc],function(err,result){
                 if (!err) {
                     var locId = result[0].locationid;
-                    console.log("locid: " + locId);
                     connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?",
                         [req.params.type], function (err, result) {
                             if (!err) {
                                 var typeid = result[0].datatypeid;
-                                console.log("typeid: " + typeid);
                                 var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?)",
                                     [locId, typeid]);
-                                console.log("query: " + query);
                                 connection.query(query, function (err, result) {
-                                    console.log(result);
                                     res.json(result)
                                 });
                             } else {
-                                res.json({"Error": true, "Message": "Error executing MySQL query 2"});
+                                res.json({"Error": true, "Message": "Error executing MySQL query"});
                             }
                         });
                 } else {
-                    res.json({"Error": true, "Message": "Error executing MySQL query 1"});
+                    res.json({"Error": true, "Message": "Error executing MySQL query"});
                 }
             });
     });
@@ -48,7 +85,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
         console.log(table);
         connection.query(query,table,function(err,result){
             if(err) {
-                res.json({"Error" : true, "Message" : "Error executing MySQL query (p type)"});
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
                 res.json({"Error" : false, "Message" : "Data type Added!"});
             }
@@ -61,7 +98,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
         console.log(table);
         connection.query(query,table,function(err,rows){
             if(err) {
-                res.json({"Error" : true, "Message" : "Error executing MySQL query (p loc)"});
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
                 res.json({"Error" : false, "Message" : "Location Added!"});
             }
@@ -74,7 +111,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
         console.log(table);
         connection.query(query,table,function(err,rows){
             if(err) {
-                res.json({"Error" : true, "Message" : "Error executing MySQL query (g loc)"});
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
                 if(rows.length < 1)
                 {
