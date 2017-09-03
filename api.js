@@ -62,8 +62,15 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                         [req.params.type], function (err, result) {
                             if (!err) {
                                 var typeid = result[0].datatypeid;
-                                var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?)",
-                                    [locId, typeid]);
+                                if(req.query.start !== undefined && req.query.end !== undefined)
+                                {
+                                    var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?) AND (timestamp > ?) AND (timestamp < ?)",
+                                        [locId, typeid,req.query.start,req.query.end]);
+                                } else
+                                {
+                                    var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?)",
+                                        [locId, typeid]);
+                                }
                                 connection.query(query, function (err, result) {
                                     res.json(result)
                                 });
