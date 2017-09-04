@@ -8,6 +8,7 @@
     "express": "latest",
     "body-parser": "latest",
     "mysql": "latest",
-    "MD5": "latest"
+    "MD5": "latest",
+    "promise": "latest"
   }
 }

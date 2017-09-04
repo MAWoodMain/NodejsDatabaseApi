@@ -1,8 +1,49 @@
 var mysql = require("mysql");
+var Promise = require('promise');
+
+var sqlErrorResponse = function (res, message) {
+    res.json({"Error": true, "Message": message});
+};
 
 function REST_ROUTER(router,connection,md5) {
     var self = this;
     self.handleRoutes(router,connection,md5);
+}
+function isDefined(item)
+{
+    return item !== undefined
+}
+
+function getLocationId(connection,tag)
+{
+    return new Promise(function (fulfill,reject)
+    {
+        connection.query("SELECT locationid FROM location WHERE tag LIKE ?", [tag],function(err,result)
+        {
+            if (!err) {
+                fulfill(result[0].locationid);
+            } else
+            {
+                reject(err)
+            }
+        });
+    });
+}
+
+function getTypeId(connection,tag)
+{
+    return new Promise(function (fulfill,reject)
+    {
+        connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?", [tag],function(err,result)
+        {
+            if (!err) {
+                fulfill(result[0].datatypeid);
+            } else
+            {
+                reject(err)
+            }
+        });
+    });
 }
 
 REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
@@ -12,6 +53,17 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
 
     router.post("/:loc/:type",function(req,res)
     {
+        /*var locPromise = getLocationId(connection,req.params.loc);
+        var typePromise = getTypeId(connection,req.params.type);
+
+        typePromise.then(function(typeId)
+        {
+            console.log("typeId: " + typeId);
+            locPromise.then(function (locId) {
+                console.log("locId: " + locId);
+                res.json({"Error" : false, "Message" : "OK"})
+            }, sqlErrorResponse(res,"Unknown location tag"))
+        }, sqlErrorResponse(res,"Unknown data type tag"));*/
 
         connection.query("SELECT locationid FROM location WHERE tag LIKE ?",
             [req.params.loc],function(err,result){
@@ -29,7 +81,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                                 for(var item in req.body)
                                 {
                                     console.log(req.body[item]);
-                                    if(req.body[item].reading !== undefined && req.body[item].timestamp !== undefined)
+                                    if(isDefined(req.body[item].reading)&& isDefined(req.body[item].timestamp))
                                     {
                                         values = [locId,typeid,req.body[item].reading,req.body[item].timestamp];
                                         connection.query(query,values, function (err, result) {
@@ -62,13 +114,14 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                         [req.params.type], function (err, result) {
                             if (!err) {
                                 var typeid = result[0].datatypeid;
-                                if(req.query.start !== undefined && req.query.end !== undefined)
+                                var query;
+                                if(isDefined(req.query.start) && isDefined(req.query.end))
                                 {
-                                    var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?) AND (timestamp > ?) AND (timestamp < ?)",
+                                    query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?) AND (timestamp > ?) AND (timestamp < ?)",
                                         [locId, typeid,req.query.start,req.query.end]);
                                 } else
                                 {
-                                    var query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?)",
+                                    query = mysql.format("SELECT reading, timestamp FROM readings WHERE (locationid LIKE ?) AND (datatypeid LIKE ?)",
                                         [locId, typeid]);
                                 }
                                 connection.query(query, function (err, result) {
