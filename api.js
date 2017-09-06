@@ -14,38 +14,6 @@ function isDefined(item)
     return item !== undefined
 }
 
-function getLocationId(connection,tag)
-{
-    return new Promise(function (fulfill,reject)
-    {
-        connection.query("SELECT locationid FROM location WHERE tag LIKE ?", [tag],function(err,result)
-        {
-            if (!err) {
-                fulfill(result[0].locationid);
-            } else
-            {
-                reject(err)
-            }
-        });
-    });
-}
-
-function getTypeId(connection,tag)
-{
-    return new Promise(function (fulfill,reject)
-    {
-        connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?", [tag],function(err,result)
-        {
-            if (!err) {
-                fulfill(result[0].datatypeid);
-            } else
-            {
-                reject(err)
-            }
-        });
-    });
-}
-
 REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
     router.get("/",function(req,res){
         res.json({"Message" : "Hello World!"});
@@ -53,18 +21,6 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
 
     router.post("/:loc/:type",function(req,res)
     {
-        /*var locPromise = getLocationId(connection,req.params.loc);
-        var typePromise = getTypeId(connection,req.params.type);
-
-        typePromise.then(function(typeId)
-        {
-            console.log("typeId: " + typeId);
-            locPromise.then(function (locId) {
-                console.log("locId: " + locId);
-                res.json({"Error" : false, "Message" : "OK"})
-            }, sqlErrorResponse(res,"Unknown location tag"))
-        }, sqlErrorResponse(res,"Unknown data type tag"));*/
-
         connection.query("SELECT locationid FROM location WHERE tag LIKE ?",
             [req.params.loc],function(err,result){
                 if (!err) {
@@ -137,10 +93,21 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
             });
     });
 
+    router.get("/datatype", function(req,res){
+        var query = "SELECT name, tag, symbol, description FROM datatype";
+
+        connection.query(query,function(err,rows){
+            if(err) {
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
+            } else {
+                res.json(rows)
+            }
+        });
+    });
 
     router.put("/datatype", function(req,res){
         var query = "INSERT INTO ??(??,??,??,??) VALUES (?,?,?,?)";
-        var table = ["dataType","name","tag","symbol","description",
+        var table = ["datatype","name","tag","symbol","description",
             req.body.name, req.body.tag, req.body.symbol, req.body.description];
         console.log(table);
         connection.query(query,table,function(err,result){
@@ -148,6 +115,18 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                 res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
                 res.json({"Error" : false, "Message" : "Data type Added!"});
+            }
+        });
+    });
+
+    router.get("/location", function(req,res){
+        var query = "SELECT name, tag, description FROM location";
+
+        connection.query(query,function(err,rows){
+            if(err) {
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
+            } else {
+                res.json(rows)
             }
         });
     });

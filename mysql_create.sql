@@ -7,7 +7,7 @@ CREATE TABLE `location` (
 	PRIMARY KEY (`locationid`)
 );
 
-CREATE TABLE `dataType` (
+CREATE TABLE `datatype` (
 	`datatypeid` INT NOT NULL AUTO_INCREMENT,
 	`name` varchar(25) NOT NULL,
 	`tag` varchar(25) NOT NULL,
@@ -29,5 +29,5 @@ ALTER TABLE `location` ADD CONSTRAINT `location_fk0` FOREIGN KEY (`parentlocatio
 
 ALTER TABLE `readings` ADD CONSTRAINT `readings_fk0` FOREIGN KEY (`locationid`) REFERENCES `location`(`locationid`);
 
-ALTER TABLE `readings` ADD CONSTRAINT `readings_fk1` FOREIGN KEY (`datatypeid`) REFERENCES `dataType`(`datatypeid`);
+ALTER TABLE `readings` ADD CONSTRAINT `readings_fk1` FOREIGN KEY (`datatypeid`) REFERENCES `datatype`(`datatypeid`);
 
