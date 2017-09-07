@@ -27,8 +27,8 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                     var locId = result[0].locationid;
                     connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?",
                         [req.params.type], function (err, result) {
-                            var typeid = result[0].datatypeid;
-                            if (!err && isDefined(typeid)) {
+                            if (!err && isDefined(result[0])) {
+                                var typeid = result[0].datatypeid;
                                 var query = "INSERT INTO readings (locationid,datatypeid,reading,timestamp) VALUES (?,?,?,?)";
                                 var values;
                                 var count = 0;
@@ -68,8 +68,9 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection,md5) {
                     var locId = result[0].locationid;
                     connection.query("SELECT datatypeid FROM datatype WHERE tag LIKE ?",
                         [req.params.type], function (err, result) {
-                            var typeid = result[0].datatypeid;
-                            if (!err && isDefined(typeid)) {
+
+                            if (!err && isDefined(result[0])) {
+                                var typeid = result[0].datatypeid;
                                 var query;
                                 if(isDefined(req.query.start) && isDefined(req.query.end))
                                 {
